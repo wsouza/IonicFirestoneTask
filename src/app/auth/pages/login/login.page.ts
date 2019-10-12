@@ -1,3 +1,4 @@
+import { OverlayService } from './../../../core/services/overlay.service';
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, FormControl } from '@angular/forms';
 
@@ -19,7 +20,11 @@ export class LoginPage implements OnInit {
   };
   private nameControl = new FormControl('', [Validators.required, Validators.minLength(3)]);
 
-  constructor(private authService: AuthService, private fb: FormBuilder) { }
+  constructor(
+    private authService: AuthService,
+    private fb: FormBuilder,
+    private overlayService: OverlayService
+  ) {}
 
   ngOnInit(): void {
     this.createForm();
@@ -33,15 +38,15 @@ export class LoginPage implements OnInit {
   }
 
   get name(): FormControl {
-    return  this.authForm.get('name') as FormControl;
+    return this.authForm.get('name') as FormControl;
   }
 
   get email(): FormControl {
-    return  this.authForm.get('email') as FormControl;
+    return this.authForm.get('email') as FormControl;
   }
 
   get password(): FormControl {
-    return  this.authForm.get('password') as FormControl;
+    return this.authForm.get('password') as FormControl;
   }
 
   changeAuthAction(): void {
@@ -55,6 +60,7 @@ export class LoginPage implements OnInit {
   }
 
   async onSubmit(provider: AuthProvider): Promise<void> {
+    const loading = await this.overlayService.loading();
     try {
       const credentials = await this.authService.authenticate({
         isSignIn: this.configs.isSignIn,
@@ -65,6 +71,11 @@ export class LoginPage implements OnInit {
       console.log('Redirecting...');
     } catch (e) {
       console.log('Auth error: ', e);
+      await this.overlayService.toast({
+        message: e.message
+      });
+    } finally {
+      loading.dismiss();
     }
   }
 }
